@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { evaluate } from 'mathjs';
 import ScreenDispay from './component/Screen.jsx'
 import Keypad from './component/Keypad.jsx'
 
@@ -8,30 +9,101 @@ function App() {
   const [displayData, setDisplayData] = useState(0);
   const [inputData, setInputData] = useState(''); 
 
-  const [mode, setMode] = useState('light');
+  const [mode, setMode] = useState(() => {
+    const savedMode = localStorage.getItem('mode');
+    return savedMode ? savedMode : 'light';
+  });
 
   
   const onKeyPress = (key) => {
-    setInputData((prev) => prev + key.toString());
+    const operators = ['+', '-', '×', '÷', '=',];
 
-    if (key === '⌫') {
-      setInputData((prev) => prev.slice(0, -2));
+    if(displayData === 'Error') setDisplayData(0);
 
-      if (inputData.length <= 1) {
-        setInputData('');
-        setDisplayData(0);
-      }
-    } else if (key === '=') {
-      try {
-        const result = eval(inputData);
+
+    if(operators.includes(key) && inputData === '') return;
+    if(operators.includes(key) && operators.includes(inputData.slice(-1))) return;
+
+    if (typeof key === 'string' && key.length === 1) {
+      setInputData(prev => prev + key);
+    }
+
+
+    if (key === 'backspace') {
+      setInputData(prev => {
+      const next = prev.slice(0, -1);
+      if (next === '') setDisplayData(0);
+      return next;
+      });
+    }
+
+    else if (key === 'clear') {
+      setInputData('')
+      setDisplayData(0)
+    }
+
+    else if (key === '=') {
+      try{
+
+        if (!inputData) return;
+
+        const preparedInput = inputData
+        .replace(/×/g, '*')
+        .replace(/÷/g, '/')
+        .replace(/√(\d+(\.\d+)?)/g, 'sqrt($1)');
+
+          
+
+        const result = evaluate(preparedInput);
+
+        if (!isFinite(result)) {
+          throw new Error();
+        }
+
         setDisplayData(result);
         setInputData('');
-      } catch (error) {
+
+      } 
+      catch (error) {
         setDisplayData('Error');
         setInputData('');
       }
     }
-  };
+
+    // Math.sqrt(evaluate(inputData))
+
+
+    // else if (key === '√') {
+    //   try {
+    //     const result = Math.sqrt(evaluate(inputData.replace(/÷/g, '/').replace(/×/g, '*')));
+    //     setDisplayData(result);
+    //     setInputData('');
+    //   } catch (error) {
+    //     setDisplayData('Error');
+    //     setInputData('');
+    //   }
+    // }
+
+    else if (key === 'mode') {
+    setMode(prev => (prev === 'light' ? 'dark' : 'light'));
+    }
+  }
+
+  useEffect(() => {
+    if (mode === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [mode]);
+
+  useEffect(() => {
+    localStorage.setItem('mode', mode);
+  }, [mode]);
+
+
+
+
 
   return (
     <>
