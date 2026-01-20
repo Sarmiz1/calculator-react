@@ -4,7 +4,7 @@ import ScreenDispay from './component/Screen.jsx'
 import Keypad from './component/Keypad.jsx'
 
 function App() {
-
+  
 
   const [displayData, setDisplayData] = useState(0);
   const [inputData, setInputData] = useState(''); 
@@ -17,6 +17,16 @@ function App() {
   
   const onKeyPress = (key) => {
     const operators = ['+', '-', '×', '÷', '=',];
+
+    if(inputData === '0' && key === 'mode') {
+      setInputData('0');
+    } else if(inputData === '0' && !operators.includes(key)) {
+        setInputData(key);
+        return;
+      }
+
+
+      if(inputData.includes('.') && key === '.') return;
 
     if(displayData === 'Error') setDisplayData(0);
 
@@ -70,19 +80,6 @@ function App() {
       }
     }
 
-    // Math.sqrt(evaluate(inputData))
-
-
-    // else if (key === '√') {
-    //   try {
-    //     const result = Math.sqrt(evaluate(inputData.replace(/÷/g, '/').replace(/×/g, '*')));
-    //     setDisplayData(result);
-    //     setInputData('');
-    //   } catch (error) {
-    //     setDisplayData('Error');
-    //     setInputData('');
-    //   }
-    // }
 
     else if (key === 'mode') {
     setMode(prev => (prev === 'light' ? 'dark' : 'light'));
